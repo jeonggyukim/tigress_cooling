@@ -544,7 +544,7 @@ static const Real log10L_hot_metal_[len_hot_] =
    -23.12639231, -23.12272477, -23.11905478
   };
 
-static const Real log10L_hot_x_e_[len_hot_] =
+static const Real hot_x_e_[len_hot_] =
   {
    1.56222740e-04, 1.57258453e-04, 1.58433553e-04, 1.59610290e-04,
    1.61128331e-04, 1.62656514e-04, 1.65114926e-04, 1.67622514e-04,
@@ -835,6 +835,8 @@ Real coolingHot(const Real T, const Real Z_g);
 Real coolingHotHHe(const Real T);
 //cooling of hot gas (metal only), Wiersma, Schaye, and Smith (2008)
 Real coolingHotMetal(const Real T, const Real Z_g);
+//x_e of hot gas (assuming solar metallicity)
+Real fe_hot(const Real T);
 
 //helper functions for cooling-------------------------------------------------
 Real CII_rec_rate_(const Real temp);
@@ -1535,6 +1537,27 @@ Real coolingHotMetal(const Real T, const Real Z_g) {
   
   const Real log10L_metal = LP1Di_(log10T_hot_, log10L_hot_metal_, iT, log10T);
   return pow(10, log10L_metal) * Z_g;
+}
+
+Real fe_hot(const Real T) {
+
+  const Real log10T = log10(T);
+
+  // Get temperature index for interpolation
+  Real log10Tmin=3.8;
+  Real log10Tmax=8.98;
+  int iT;
+  Real iT_;
+  if (log10T < log10Tmin) {
+    iT = 0;
+  } else if (log10T >= log10Tmax) {
+    iT = len_hot_ - 2;
+  } else {
+    iT_ = (log10T - log10Tmin)*dlog10T_hot_inv_;
+    iT = (int)(MIN(iT_, len_hot_ - 2));
+  }
+  
+  return LP1Di_(log10T_hot_, hot_x_e_, iT, log10T);
 }
 
 #undef len_hot_
